@@ -17,11 +17,11 @@ export type BottomTabParamList = {
 
 export type TabOneParamList = {
   Yoga: undefined;
-  Yoga2: undefined;
 };
 
 export type TabTwoParamList = {
   Meditation: undefined;
+  MediaPage: undefined;
 };
 
 export type TabThreeParamList = {

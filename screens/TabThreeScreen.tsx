@@ -7,9 +7,7 @@ import { Text, View } from '../components/Themed';
 export default function TabThreeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab three</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="/screens/TabThreeScreen.tsx" />
+      <Text style={styles.title}>Tab not in use</Text>
     </View>
   );
 }
@@ -17,11 +15,13 @@ export default function TabThreeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     fontSize: 20,
+    color: 'black',
     fontWeight: 'bold',
   },
   separator: {

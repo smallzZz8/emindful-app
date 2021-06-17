@@ -10,9 +10,10 @@ import * as React from 'react';
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
 import TabOneScreen from '../screens/TabOneScreen';
-import TabTwoScreen from '../screens/TabOneScreen';
-import TabThreeScreen from '../screens/TabOneScreen';
-import TabFourScreen from '../screens/TabOneScreen';
+import TabTwoScreen from '../screens/TabTwoScreen';
+import TabThreeScreen from '../screens/TabThreeScreen';
+import TabFourScreen from '../screens/TabFourScreen';
+import MediaScreen from '../screens/MediaScreen';
 import { BottomTabParamList, TabOneParamList, TabTwoParamList, TabThreeParamList, TabFourParamList } from '../types';
 
 // Icons
@@ -27,7 +28,7 @@ export default function BottomTabNavigator() {
 
   return (
     <BottomTab.Navigator
-      initialRouteName="Profile"
+      initialRouteName="Meditation"
       tabBarOptions={{ activeTintColor: "#D3AAE2", activeBackgroundColor: "white", inactiveBackgroundColor: "white" }}>
       <BottomTab.Screen
         name="Yoga"
@@ -79,11 +80,6 @@ function TabOneNavigator() {
         component={TabOneScreen}
         options={{ headerShown: false }}
       />
-      <TabOneStack.Screen
-        name="Yoga2"
-        component={TabFourScreen}
-        options={{ headerShown: false }}
-      />
     </TabOneStack.Navigator>
   );
 }
@@ -96,6 +92,11 @@ function TabTwoNavigator() {
       <TabTwoStack.Screen
         name="Meditation"
         component={TabTwoScreen}
+        options={{ headerShown: false }}
+      />
+      <TabTwoStack.Screen
+        name="MediaPage"
+        component={MediaScreen}
         options={{ headerShown: false }}
       />
     </TabTwoStack.Navigator>

@@ -6,35 +6,9 @@ import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 
 const image = { uri: "https://reactjs.org/logo-og.png" };
+const fetchURL = "https://app-14423.on-aptible.com/programs";
 
-const DATA2 = [
-  {
-    id: 'bd7acbea-c1b1-46c2-323aed5-3ad53abb28ba',
-    title: 'Breather',
-    mins: '12 mins',
-    desc: 'A 5-Minute Intro to Meditation. Relax and inhale to start.',
-  },
-  {
-    id: 'bd7acbea-c1b12-46c2-aed5-3ad2353abb28ba',
-    title: 'Love-Kind Meditation',
-    mins: '20 mins',
-    desc: 'Cultivate the ability to notice being experienced in the body.',
-  },
-  {
-    id: 'bd7acbea-c1b1-46c2-aed5-323ad53abb2238ba',
-    title: 'Flower Meditation',
-    mins: '13 mins',
-    desc: 'Outdoor concentration meditation. The object is a flower.',
-  },
-  {
-    id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28b232a',
-    title: 'Love-Kind Meditation',
-    mins: '20 mins',
-    desc: 'Cultivate the ability to notice being experienced in the body.',
-  },
-];
-
-function getMins(createdDate : string) {
+function getMins(createdDate: string) {
   let date = new Date(createdDate);
   let now = Date.now();
 
@@ -45,56 +19,47 @@ function getMins(createdDate : string) {
 }
 
 const Item = ({ data }) => (
-  <TouchableOpacity
-    onPress={() => alert('Hello World')}
-  >
-    <View style={styles.item}>
-      <View style={styles.itemTextView}>
-        <View style={styles.mins}><Text style={styles.minsText}>{getMins(data.attributes.created_at)} weeks ago</Text></View>
-        <Text style={styles.itemHeader}>{data.attributes.name}</Text>
-        {/* <Text style={styles.itemDescription}>{data.desc}</Text> */}
-      </View>
-
-      <View style={styles.itemImageView}>
-        <Image source={require('../assets/images/itemImage.png')} style={styles.itemImage} />
-      </View>
+  <View style={styles.item}>
+    <View style={styles.itemTextView}>
+      <View style={styles.mins}><Text style={styles.minsText}>{getMins(data.attributes.created_at)} weeks ago</Text></View>
+      <Text style={styles.itemHeader}>{data.attributes.name}</Text>
+      <Text style={styles.itemDescription}>{data.relationships.episodes.data.length} episodes</Text>
     </View>
-  </TouchableOpacity>
+
+    <View style={styles.itemImageView}>
+      <Image source={require('../assets/images/itemImage.png')} style={styles.itemImage} />
+    </View>
+  </View>
 );
 
-export default function TabTwoScreen() {
+export default function TabTwoScreen({ navigation }) {
 
   // Hooks
-  const [pulledData, setData] = React.useState([null]);
-  const [programData, setProgramData] = React.useState([null]);
-  const array = [];
-
-  const renderItem = ({ item }) => (
-    <Item data={item} />
-  );
-
+  const [pulledData, setPulledData] = React.useState([null]);
+  const [programData, setProgramData] = React.useState({});
 
   async function fetchData() {
-    return fetch('https://app-14423.on-aptible.com/programs?format=recorded&limit=10&category_ids=35')
-      .then((response) => response.json())
-      .then((json) => {
-        setData(json.data);
-        for (const item of json.data) {
-          fetch('https://app-14423.on-aptible.com/programs/' + item.id)
-            .then((response) => response.json())
-            .then((json) => {
-              // setProgramData(json.data);
-              console.log(item.id);
-            })
-        }
-
+    fetch(`${fetchURL}?format=recorded&limit=10&category_ids=35`, { method: 'get' })
+      .then(response => response.json())
+      .then(async data => {
+        setPulledData(data.data);
       })
-      .catch((error) => {
-        console.error(error);
-      });
+      .catch(err => {
+        console.error('Request failed', err)
+      })
   }
 
-
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      onPress={async () => {
+        // await fetchProgramData(item.id);
+        navigation.navigate('MediaPage', item.id);
+        // console.log(programData);
+      }}
+    >
+      <Item data={item} />
+    </TouchableOpacity>
+  );
 
   React.useEffect(() => {
 
@@ -213,7 +178,7 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 5
+    marginBottom: 8
   },
   minsText: {
     color: '#be64df',
