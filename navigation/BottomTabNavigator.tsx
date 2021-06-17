@@ -3,7 +3,6 @@
  * https://reactnavigation.org/docs/bottom-tab-navigator
  */
 
-import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as React from 'react';
@@ -11,8 +10,15 @@ import * as React from 'react';
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
 import TabOneScreen from '../screens/TabOneScreen';
-import TabTwoScreen from '../screens/TabTwoScreen';
-import { BottomTabParamList, TabOneParamList, TabTwoParamList } from '../types';
+import TabTwoScreen from '../screens/TabOneScreen';
+import TabThreeScreen from '../screens/TabOneScreen';
+import TabFourScreen from '../screens/TabOneScreen';
+import { BottomTabParamList, TabOneParamList, TabTwoParamList, TabThreeParamList, TabFourParamList } from '../types';
+
+// Icons
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -21,20 +27,34 @@ export default function BottomTabNavigator() {
 
   return (
     <BottomTab.Navigator
-      initialRouteName="TabOne"
-      tabBarOptions={{ activeTintColor: "#D3AAE2" }}>
+      initialRouteName="Profile"
+      tabBarOptions={{ activeTintColor: "#D3AAE2", activeBackgroundColor: "white", inactiveBackgroundColor: "white" }}>
       <BottomTab.Screen
-        name="TabOne"
+        name="Yoga"
         component={TabOneNavigator}
         options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="ios-code" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="yoga" size={24} color={color}/>,
         }}
       />
       <BottomTab.Screen
-        name="TabTwo"
+        name={"Meditation"}
         component={TabTwoNavigator}
         options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="ios-code" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="planet" size={24} color={color} />,
+        }}
+      />
+      <BottomTab.Screen
+        name="Food"
+        component={TabThreeNavigator}
+        options={{
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="fruit-pineapple" size={24} color={color} />,
+        }}
+      />
+      <BottomTab.Screen
+        name="Profile"
+        component={TabFourNavigator}
+        options={{
+          tabBarIcon: ({ color }) => <MaterialIcons name="face" size={24} color={color} />,
         }}
       />
     </BottomTab.Navigator>
@@ -55,8 +75,13 @@ function TabOneNavigator() {
   return (
     <TabOneStack.Navigator>
       <TabOneStack.Screen
-        name="TabOneScreen"
+        name="Yoga"
         component={TabOneScreen}
+        options={{ headerShown: false }}
+      />
+      <TabOneStack.Screen
+        name="Yoga2"
+        component={TabFourScreen}
         options={{ headerShown: false }}
       />
     </TabOneStack.Navigator>
@@ -69,10 +94,38 @@ function TabTwoNavigator() {
   return (
     <TabTwoStack.Navigator>
       <TabTwoStack.Screen
-        name="TabTwoScreen"
+        name="Meditation"
         component={TabTwoScreen}
         options={{ headerShown: false }}
       />
     </TabTwoStack.Navigator>
+  );
+}
+
+const TabThreeStack = createStackNavigator<TabThreeParamList>();
+
+function TabThreeNavigator() {
+  return (
+    <TabThreeStack.Navigator>
+      <TabThreeStack.Screen
+        name="Food"
+        component={TabThreeScreen}
+        options={{ headerShown: false }}
+      />
+    </TabThreeStack.Navigator>
+  );
+}
+
+const TabFourStack = createStackNavigator<TabFourParamList>();
+
+function TabFourNavigator() {
+  return (
+    <TabFourStack.Navigator>
+      <TabFourStack.Screen
+        name="Profile"
+        component={TabFourScreen}
+        options={{ headerShown: false }}
+      />
+    </TabFourStack.Navigator>
   );
 }

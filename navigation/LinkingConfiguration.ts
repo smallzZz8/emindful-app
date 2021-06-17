@@ -6,14 +6,24 @@ export default {
     screens: {
       Root: {
         screens: {
-          TabOne: {
+          Yoga: {
             screens: {
               TabOneScreen: 'one',
             },
           },
-          TabTwo: {
+          Meditation: {
             screens: {
               TabTwoScreen: 'two',
+            },
+          },
+          Food: {
+            screens: {
+              TabThreeScreen: 'three',
+            },
+          },
+          Profile: {
+            screens: {
+              TabFourScreen: 'four',
             },
           },
         },

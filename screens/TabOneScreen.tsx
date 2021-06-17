@@ -6,61 +6,29 @@ import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 
 const image = { uri: "https://reactjs.org/logo-og.png" };
+const fetchURL = "https://app-14423.on-aptible.com/programs";
 
-const DATA2 = [
-  {
-    id: 'bd7acbea-c1b1-46c2-323aed5-3ad53abb28ba',
-    title: 'Breather',
-    mins: '12 mins',
-    desc: 'A 5-Minute Intro to Meditation. Relax and inhale to start.',
-  },
-  {
-    id: 'bd7acbea-c1b12-46c2-aed5-3ad2353abb28ba',
-    title: 'Love-Kind Meditation',
-    mins: '20 mins',
-    desc: 'Cultivate the ability to notice being experienced in the body.',
-  },
-  {
-    id: 'bd7acbea-c1b1-46c2-aed5-323ad53abb2238ba',
-    title: 'Flower Meditation',
-    mins: '13 mins',
-    desc: 'Outdoor concentration meditation. The object is a flower.',
-  },
-  {
-    id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28b232a',
-    title: 'Love-Kind Meditation',
-    mins: '20 mins',
-    desc: 'Cultivate the ability to notice being experienced in the body.',
-  },
-];
-
-function getMins(createdDate){
+function getMins(createdDate : string) {
   let date = new Date(createdDate);
   let now = Date.now();
 
-  console.log(date.getTime());
-  console.log(now);
-
   let difference = now - date.getTime();
-  let minutes = Math.floor(difference / 60000);
-  let hours = Math.round(minutes / 60);
-  let days = Math.round(hours / 24);
-  let weeks = Math.round(days / 7);
+  let weeks = Math.floor((((difference / 60000) / 60) / 24) / 7);
 
   return weeks;
 }
 
 const Item = ({ data }) => (
   <TouchableOpacity
-    onPress={()=> alert('Hello World')}
+    // onPress={() => navigation.navigate('Yoga2')}
   >
     <View style={styles.item}>
       <View style={styles.itemTextView}>
         <View style={styles.mins}><Text style={styles.minsText}>{getMins(data.attributes.created_at)} weeks ago</Text></View>
         <Text style={styles.itemHeader}>{data.attributes.name}</Text>
-        {/* <Text style={styles.itemDescription}>{data.desc}</Text> */}
+        <Text style={styles.itemDescription}>{data.relationships.episodes.data.length} episodes</Text>
       </View>
-      
+
       <View style={styles.itemImageView}>
         <Image source={require('../assets/images/itemImage.png')} style={styles.itemImage} />
       </View>
@@ -71,35 +39,38 @@ const Item = ({ data }) => (
 export default function TabOneScreen() {
 
   // Hooks
-  const [pulledData, setData] = React.useState([null]);
-  const [programData, setProgramData] = React.useState([null]);
-  const array = [];
+  const [pulledData, setPulledData] = React.useState([null]);
 
   const renderItem = ({ item }) => (
     <Item data={item} />
   );
 
-  React.useEffect(() => {
-    async function getData(){
-      return fetch('https://app-14423.on-aptible.com/programs?format=recorded&limit=10&category_ids=35')
-      .then((response) => response.json())
-      .then((json) => {
-        setData(json.data);
-        for(const item of json.data){
-          fetch('https://app-14423.on-aptible.com/programs/' + item.id)
-          .then((response) => response.json())
-          .then((json) => {
-            // setProgramData(json.data);
-          console.log(item.id);
-          })
-        }
-        
+  async function fetchProgramData(id) {
+    fetch(`${fetchURL}/${id}`, { method: 'get' })
+      .then(response => response.json())
+      .then(data => {
+        // console.log(data.data.attributes.description);
+        // return(data.data.attributes.description);
       })
-      .catch((error) => {
-        console.error(error);
-      });
-    }
-    getData();
+      .catch(err => {
+        console.error('Request failed', err)
+      })
+  }
+
+  async function fetchData() {
+    fetch(`${fetchURL}?format=recorded&limit=10&category_ids=35`, { method: 'get' })
+      .then(response => response.json())
+      .then(async data => {
+        setPulledData(data.data);
+      })
+      .catch(err => {
+        console.error('Request failed', err)
+      })
+  }
+
+  React.useEffect(() => {
+
+    fetchData();
   }, []);
 
   return (
@@ -129,9 +100,9 @@ export default function TabOneScreen() {
       </View>
 
       {/* Programs Section */}
-      <View style={styles.programsSection}> 
-          {
-            (pulledData[0] == null) ? <View></View> : 
+      <View style={styles.programsSection}>
+        {
+          (pulledData[0] == null) ? <View></View> :
             <FlatList
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ flexGrow: 1 }}
@@ -140,8 +111,8 @@ export default function TabOneScreen() {
               renderItem={renderItem}
               keyExtractor={item => item.id}
             />
-          }
-        </View>
+        }
+      </View>
 
 
     </View>
@@ -199,7 +170,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 0,
     width: '100%',
-    flexGrow:1,
+    flexGrow: 1,
   },
   item: {
     backgroundColor: 'white',
@@ -208,19 +179,19 @@ const styles = StyleSheet.create({
     height: 170,
     marginVertical: 8,
     width: '100%',
-    
+
   },
-  itemHeader:{
+  itemHeader: {
     color: 'black',
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 5
+    marginBottom: 8
   },
-  minsText:{
+  minsText: {
     color: '#be64df',
     width: 'auto',
   },
-  mins:{
+  mins: {
     backgroundColor: '#d7bfe055',
     padding: 5,
     borderRadius: 5,
@@ -228,12 +199,12 @@ const styles = StyleSheet.create({
     // marginLeft
     marginBottom: 8
   },
-  itemDescription:{
+  itemDescription: {
     color: '#928d8f',
     // fontSize: 40,
     lineHeight: 18
   },
-  itemImageView:{
+  itemImageView: {
     backgroundColor: 'transparent',
     position: 'absolute',
     right: 10,
@@ -244,7 +215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  itemTextView:{
+  itemTextView: {
     backgroundColor: 'transparent',
     flex: 1,
     // borderWidth: 1,
