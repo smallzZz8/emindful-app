@@ -1,5 +1,6 @@
 # emindful-app
 
+TO RUN:
 
 npm install
 
