@@ -4,6 +4,10 @@ import SvgUri from "expo-svg-uri";
 
 import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Icons
+import { Feather } from '@expo/vector-icons';
 
 const image = { uri: "https://reactjs.org/logo-og.png" };
 const fetchURL = "https://app-14423.on-aptible.com/programs";
@@ -32,24 +36,79 @@ const Item = ({ data }) => (
   </View>
 );
 
+const getData = async () => {
+  try {
+    const value = await AsyncStorage.getItem('@last_watched')
+    if (value !== null) {
+      // value previously stored
+      // console.log(value);
+      return value;
+    } else {
+      return null;
+    }
+  } catch (e) {
+    // error reading value
+  }
+}
+
 export default function TabTwoScreen({ navigation }) {
 
   // Hooks
   const [pulledData, setPulledData] = React.useState([null]);
-  const [programData, setProgramData] = React.useState({});
+  const [continueWatchingData, setContinueWatchingData] = React.useState(null);
 
   async function fetchData() {
+    const ac = new AbortController();
     fetch(`${fetchURL}?format=recorded&limit=10&category_ids=35`, { method: 'get' })
       .then(response => response.json())
       .then(async data => {
         setPulledData(data.data);
+        for (let ele of data.data) {
+          if (await getData() == ele.id) {
+            setContinueWatchingData(ele);
+            // console.log(ele);
+          }
+        }
       })
       .catch(err => {
         console.error('Request failed', err)
       })
+    ac.abort();
+  }
+
+  function getContinueWatching() {
+    return (
+      <View style={styles.continueWatching}>
+        <View style={styles.continueWatchingTextArea}>
+          <Text style={styles.continueWatchingText}>
+            Welcome back! Continue watching:
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={async () => {
+            navigation.navigate('MediaPage', continueWatchingData.id);
+          }}
+        >
+          <Item data={continueWatchingData} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={async () => {
+            AsyncStorage.clear();
+            setContinueWatchingData(null);
+          }}
+        >
+          <View style={styles.dividerIcon}>
+            <Feather name="divide-circle" size={24} color="#D3AAE2" />
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   const renderItem = ({ item }) => (
+
+    // (continueWatchingData == null) ? null : getContinueWatching()
     <TouchableOpacity
       onPress={async () => {
         // await fetchProgramData(item.id);
@@ -61,9 +120,14 @@ export default function TabTwoScreen({ navigation }) {
     </TouchableOpacity>
   );
 
+
+
   React.useEffect(() => {
 
-    fetchData();
+    // Rerenders page on focus in the event that there is new data or new continue watching items
+    navigation.addListener('focus', () => {
+      fetchData();
+    });
   }, []);
 
   return (
@@ -83,9 +147,9 @@ export default function TabTwoScreen({ navigation }) {
 
         {/* Header Text Section */}
         <View style={styles.header}>
-          <Text style={styles.headerText}>
-            Meditations
-          </Text>
+            <Text style={styles.headerText}>
+              Meditations
+            </Text>
           <Text style={styles.headerSubText}>
             35 mins of 60 this week
           </Text>
@@ -94,6 +158,9 @@ export default function TabTwoScreen({ navigation }) {
 
       {/* Programs Section */}
       <View style={styles.programsSection}>
+
+        {(continueWatchingData == null) ? null : getContinueWatching()}
+
         {
           (pulledData[0] == null) ? <View></View> :
             <FlatList
@@ -170,7 +237,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 25,
     height: 170,
-    marginVertical: 8,
+    marginBottom: 16,
     width: '100%',
 
   },
@@ -180,10 +247,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8
   },
+
   minsText: {
     color: '#be64df',
     width: 'auto',
   },
+
   mins: {
     backgroundColor: '#d7bfe055',
     padding: 5,
@@ -192,11 +261,13 @@ const styles = StyleSheet.create({
     // marginLeft
     marginBottom: 8
   },
+
   itemDescription: {
     color: '#928d8f',
     // fontSize: 40,
     lineHeight: 18
   },
+
   itemImageView: {
     backgroundColor: 'transparent',
     position: 'absolute',
@@ -208,12 +279,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   itemTextView: {
     backgroundColor: 'transparent',
     flex: 1,
     // borderWidth: 1,
     paddingRight: 100,
     alignItems: 'baseline'
+  },
+
+  continueWatching: {
+    backgroundColor: 'transparent',
+  },
+
+  continueWatchingTextArea: {
+    backgroundColor: 'transparent',
+    marginBottom: 8,
+  },
+
+  continueWatchingText: {
+    color: '#928d8f',
+    textAlign: 'center'
+  },
+
+  dividerIcon: {
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    marginTop: -8,
+    marginBottom: 8,
   }
 
 });

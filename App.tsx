@@ -6,8 +6,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
 import Navigation from './navigation';
+import { Provider as PaperProvider } from 'react-native-paper';
 
-import { 
+
+import {
   useFonts,
   CormorantGaramond_300Light,
   CormorantGaramond_300Light_Italic,
@@ -18,9 +20,14 @@ import {
   CormorantGaramond_600SemiBold,
   CormorantGaramond_600SemiBold_Italic,
   CormorantGaramond_700Bold,
-  CormorantGaramond_700Bold_Italic 
+  CormorantGaramond_700Bold_Italic
 } from '@expo-google-fonts/cormorant-garamond'
 import AppLoading from "expo-app-loading";
+
+// Redux
+// import { Provider } from 'react-redux'
+// import configureStore from './redux/store';
+// const store = configureStore();
 
 export default function App() {
   const isLoadingComplete = useCachedResources();
@@ -41,13 +48,15 @@ export default function App() {
 
   if (!isLoadingComplete) {
     return null;
-  } else if (!fontsLoaded){
+  } else if (!fontsLoaded) {
     return <AppLoading />;
   } else {
     return (
       <SafeAreaProvider>
-        <Navigation colorScheme={colorScheme} />
-        <StatusBar style="dark" />
+        <PaperProvider>
+          <Navigation colorScheme={colorScheme} />
+          <StatusBar style="dark" />
+        </PaperProvider>
       </SafeAreaProvider>
     );
   }

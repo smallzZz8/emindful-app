@@ -5,7 +5,7 @@
 
 export type RootStackParamList = {
   Root: undefined;
-  NotFound: undefined;
+  PlayModal: undefined;
 };
 
 export type BottomTabParamList = {

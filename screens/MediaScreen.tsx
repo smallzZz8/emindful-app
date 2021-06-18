@@ -5,6 +5,7 @@ import { min } from 'react-native-reanimated';
 import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 import { AntDesign } from '@expo/vector-icons';
+import LottieView from 'lottie-react-native';
 
 const fetchURL = "https://app-14423.on-aptible.com/programs";
 
@@ -14,7 +15,7 @@ function getDurationFormat(time) {
   return minutes + ':' + seconds;
 }
 
-const Item = ({ data, navigation }) => (
+const Item = ({ data, navigation, id }) => (
   <View style={styles.item}>
 
     <View style={styles.itemTitleArea}>
@@ -25,9 +26,22 @@ const Item = ({ data, navigation }) => (
 
     <View style={styles.itemPlay}>
       <TouchableOpacity
-        onPress={() => navigation.navigate('NotFound')}
+        onPress={() => navigation.navigate('PlayModal', {
+          title: data.attributes.name,
+          promo_image: data.attributes.promo_image,
+          programId: id
+        })}
       >
-        <AntDesign name="play" size={50} color="#D3AAE2" />
+        <LottieView
+          autoPlay={true}
+          style={{
+            width: 60,
+            height: 60,
+            backgroundColor: 'transparent',
+            opacity: 0.75,
+          }}
+          source={require('../assets/animations/play.json')}
+        />
         <Text style={styles.itemDuration}>
           {getDurationFormat(data.attributes.assets[0].duration)}
         </Text>
@@ -64,7 +78,7 @@ export default function MediaScreen({ navigation, route }) {
   }
 
   const renderItem = ({ item }) => (
-      <Item data={item} navigation={navigation} />
+    <Item data={item} navigation={navigation} id={route.params} />
   );
 
   function test() {
@@ -92,7 +106,13 @@ export default function MediaScreen({ navigation, route }) {
 
       <Image source={require('../assets/images/flower.png')} style={styles.image} />
 
-
+      <View style={styles.back}>
+        <TouchableOpacity
+          onPress={() => { navigation.navigate('Meditation') }}
+        >
+          <AntDesign name="back" size={28} color="black" />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.headerArea}>
         <Text style={styles.headerText}>
@@ -102,7 +122,7 @@ export default function MediaScreen({ navigation, route }) {
 
 
       {
-        (episodes == []) ? <View><Text>testerr</Text></View> :
+        (episodes == []) ? <View></View> :
           <FlatList
             horizontal={true}
             showsHorizontalScrollIndicator={false}
@@ -199,7 +219,7 @@ const styles = StyleSheet.create({
     // fontFamily: 'CormorantGaramond_600SemiBold_Italic',
     // fontSize: 18,
     // lineHeight: 18
-    marginTop: 5,
+    // marginTop: 5,
     textAlign: 'center',
     color: '#928d8f',
     fontSize: 13,
@@ -212,5 +232,12 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'transparent',
     opacity: 0.30
-  }
+  },
+  back: {
+    backgroundColor: 'transparent',
+    position: 'absolute',
+    left: 0,
+    top: 50,
+    padding: 30,
+  },
 });
