@@ -14,53 +14,54 @@ import { AntDesign } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import { FontAwesome5 } from '@expo/vector-icons';
 
+// Redux
+import { ApplicationState, storeAllData, storeProgramData } from '../redux';
+import { useSelector, useDispatch } from 'react-redux';
+
 export default function PlayModal({
   navigation,
   route
 }: StackScreenProps<RootStackParamList, 'PlayModal'>) {
+
+  // Redux
+  const dispactch = useDispatch();
+  const { allData, programData } = useSelector((state: ApplicationState) => state.UserReducer);
 
   // Hooks
   const [sound, setSound] = React.useState();
   const [play, setPlay] = React.useState(true);
   const [started, setStarted] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
-  const [animation, setAnimation] = React.useState();
   const LottieRef = React.useRef(null);
+  const [title, setTitle] = React.useState();
+  const [promoImage, setPromoImage] = React.useState();
 
-  const storeData = async (value) => {
+  const storeData = async (programId, episodeId) => {
     try {
-      await AsyncStorage.setItem('@last_watched', value);
-      console.log("Saving: " + value);
+      await AsyncStorage.setItem('@last_watched_program_id', programId);
+      await AsyncStorage.setItem('@last_watched_episode_id', episodeId);
     } catch (e) {
       // saving error
       console.log(e);
     }
   }
 
-  async function updateProgressBar(theSound) {
-    return setInterval(async () => {
-      setProgress((await theSound.getStatusAsync()).positionMillis / (await theSound.getStatusAsync()).playableDurationMillis);
-    }, 1000);
-  }
-
   async function playSound() {
-    console.log('Loading Sound');
     const { sound } = await Audio.Sound.createAsync(
       { uri: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }
     );
     setSound(sound);
     setStarted(true);
 
-    console.log('Playing Sound');
     await sound.playAsync();
-    updateProgressBar(sound);
   }
+
 
   function controller(bool) {
     if (bool) {
       (!started) ? playSound() : sound.playAsync();
       LottieRef.current.play();
-      storeData(route.params.programId);
+      storeData(route.params.programId, route.params.episodeId);
     }
     else {
       sound.pauseAsync();
@@ -70,16 +71,35 @@ export default function PlayModal({
     setPlay(!play);
   }
 
+
   React.useEffect(() => {
 
+    if (started) {
+      var progressBarCheck = setInterval(async () => {
+        setProgress((await theSound.getStatusAsync()).positionMillis / (await theSound.getStatusAsync()).playableDurationMillis);
+      }, 1000);
+    }
 
-
+    // Sets all data
+    for (let program of programData) {
+      if (program.data.id == route.params.programId) {
+        for (let episode of program.included) {
+          if (episode.id == route.params.episodeId) {
+            setTitle(episode.attributes.name);
+            setPromoImage(episode.attributes.promo_image);
+            break;
+          }
+        }
+      }
+    }
 
     return sound ? () => {
-      console.log('Unloading Sound');
       sound.unloadAsync();
+      clearInterval(progressBarCheck);
+      progressBarCheck = null;
     } : undefined;
   }, [sound]);
+
   return (
     <View style={styles.container}>
 
@@ -98,7 +118,9 @@ export default function PlayModal({
 
       <View style={styles.back}>
         <TouchableOpacity
-          onPress={() => { navigation.goBack() }}
+          onPress={() => {
+            navigation.goBack();
+          }}
         >
           <AntDesign name="back" size={28} color="black" />
         </TouchableOpacity>
@@ -107,12 +129,12 @@ export default function PlayModal({
 
       <View style={styles.titleArea}>
         <Text style={styles.titleText}>
-          {route.params.title}
+          {title}
         </Text>
       </View>
 
       <View>
-        <Image source={{ uri: route.params.promo_image }} style={styles.image} />
+        <Image source={{ uri: promoImage }} style={styles.image} />
       </View>
 
       <View style={styles.controllerArea}>
@@ -180,7 +202,7 @@ const styles = StyleSheet.create({
   titleArea: {
     marginBottom: 20,
   },
-  
+
   titleText: {
     color: 'black',
     fontSize: 30,
@@ -201,7 +223,6 @@ const styles = StyleSheet.create({
 
   progressArea: {
     marginTop: 25,
-    // marginBottom: 50,
     width: '90%',
   },
 

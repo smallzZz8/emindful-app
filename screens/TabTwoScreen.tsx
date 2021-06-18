@@ -2,14 +2,16 @@ import * as React from 'react';
 import { StyleSheet, Image, FlatList, TouchableOpacity } from 'react-native';
 import SvgUri from "expo-svg-uri";
 
-import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Icons
 import { Feather } from '@expo/vector-icons';
 
-const image = { uri: "https://reactjs.org/logo-og.png" };
+// Redux
+import { ApplicationState, storeAllData, storeProgramData } from '../redux';
+import { useSelector, useDispatch } from 'react-redux';
+
 const fetchURL = "https://app-14423.on-aptible.com/programs";
 
 function getMins(createdDate: string) {
@@ -38,44 +40,66 @@ const Item = ({ data }) => (
 
 const getData = async () => {
   try {
-    const value = await AsyncStorage.getItem('@last_watched')
-    if (value !== null) {
-      // value previously stored
-      // console.log(value);
-      return value;
-    } else {
-      return null;
-    }
+    const programId = await AsyncStorage.getItem('@last_watched_program_id');
+    const episodeId = await AsyncStorage.getItem('@last_watched_episode_id')
+
+    if (programId !== null && episodeId !== null)
+      return [programId, episodeId];
+    else
+      return [0, 0];
+
   } catch (e) {
     // error reading value
+    console.log(e);
   }
 }
+
+
 
 export default function TabTwoScreen({ navigation }) {
 
   // Hooks
   const [pulledData, setPulledData] = React.useState([null]);
   const [continueWatchingData, setContinueWatchingData] = React.useState(null);
+  const [continueWatchingEpisodeId, setContinueWatchingEpisodeId] = React.useState(null);
 
+  // Redux
+  const dispactch = useDispatch();
+  const { allData, programData } = useSelector((state: ApplicationState) => state.UserReducer);
+
+  // Fetch individual program
+  async function fetchProgramData(id) {
+    fetch(`${fetchURL}/${id}`, { method: 'get' })
+      .then(response => response.json())
+      .then(data => {
+        dispactch(storeProgramData(data));
+      })
+      .catch(err => {
+        console.error('Request failed', err)
+      })
+  }
+
+  // Fetch programs
   async function fetchData() {
-    const ac = new AbortController();
     fetch(`${fetchURL}?format=recorded&limit=10&category_ids=35`, { method: 'get' })
       .then(response => response.json())
       .then(async data => {
         setPulledData(data.data);
+        dispactch(storeAllData(data.data));
         for (let ele of data.data) {
-          if (await getData() == ele.id) {
+          fetchProgramData(ele.id);
+          if ((await getData())[0] == ele.id) {
             setContinueWatchingData(ele);
-            // console.log(ele);
+            setContinueWatchingEpisodeId((await getData())[1]);
           }
         }
       })
       .catch(err => {
         console.error('Request failed', err)
       })
-    ac.abort();
   }
 
+  // Render for the continue watching
   function getContinueWatching() {
     return (
       <View style={styles.continueWatching}>
@@ -86,7 +110,10 @@ export default function TabTwoScreen({ navigation }) {
         </View>
         <TouchableOpacity
           onPress={async () => {
-            navigation.navigate('MediaPage', continueWatchingData.id);
+            navigation.navigate('PlayModal', {
+              programId: continueWatchingData.id,
+              episodeId: continueWatchingEpisodeId,
+            });
           }}
         >
           <Item data={continueWatchingData} />
@@ -106,14 +133,12 @@ export default function TabTwoScreen({ navigation }) {
     );
   }
 
+  // Render for flatlist
   const renderItem = ({ item }) => (
 
-    // (continueWatchingData == null) ? null : getContinueWatching()
     <TouchableOpacity
       onPress={async () => {
-        // await fetchProgramData(item.id);
         navigation.navigate('MediaPage', item.id);
-        // console.log(programData);
       }}
     >
       <Item data={item} />
@@ -126,13 +151,13 @@ export default function TabTwoScreen({ navigation }) {
 
     // Rerenders page on focus in the event that there is new data or new continue watching items
     navigation.addListener('focus', () => {
-      fetchData();
+    fetchData();
     });
+
   }, []);
 
   return (
     <View style={styles.container}>
-
 
       {/* Header */}
       <View style={styles.header}>
@@ -147,9 +172,9 @@ export default function TabTwoScreen({ navigation }) {
 
         {/* Header Text Section */}
         <View style={styles.header}>
-            <Text style={styles.headerText}>
-              Meditations
-            </Text>
+          <Text style={styles.headerText}>
+            Meditations
+          </Text>
           <Text style={styles.headerSubText}>
             35 mins of 60 this week
           </Text>
@@ -160,7 +185,6 @@ export default function TabTwoScreen({ navigation }) {
       <View style={styles.programsSection}>
 
         {(continueWatchingData == null) ? null : getContinueWatching()}
-
         {
           (pulledData[0] == null) ? <View></View> :
             <FlatList
@@ -174,7 +198,6 @@ export default function TabTwoScreen({ navigation }) {
         }
       </View>
 
-
     </View>
   );
 }
@@ -187,20 +210,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2EAF5',
     paddingHorizontal: 20
   },
+
   title: {
     backgroundColor: '#F2EAF5',
     fontSize: 20,
     fontWeight: 'bold',
   },
+
   separator: {
     marginVertical: 30,
     height: 1,
     width: '80%',
   },
+
   header: {
     width: "100%",
     backgroundColor: 'transparent',
   },
+
   headerText: {
     width: "100%",
     color: 'black',
@@ -210,21 +237,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 10
   },
+
   headerSubText: {
     width: "100%",
     color: '#928d8f',
     fontSize: 15,
     textAlign: 'center'
   },
+
   image: {
     marginTop: 50,
   },
+
   itemImage: {
-    // marginTop: 50,
     width: 100,
     height: 100,
     borderRadius: 30,
   },
+
   programsSection: {
     backgroundColor: 'transparent',
     marginTop: 20,
@@ -232,6 +262,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexGrow: 1,
   },
+
   item: {
     backgroundColor: 'white',
     borderRadius: 30,
@@ -258,13 +289,11 @@ const styles = StyleSheet.create({
     padding: 5,
     borderRadius: 5,
     width: 'auto',
-    // marginLeft
     marginBottom: 8
   },
 
   itemDescription: {
     color: '#928d8f',
-    // fontSize: 40,
     lineHeight: 18
   },
 
@@ -274,7 +303,6 @@ const styles = StyleSheet.create({
     right: 10,
     bottom: 0,
     top: 0,
-    // borderWidth: 1,
     zIndex: -1000,
     alignItems: 'center',
     justifyContent: 'center',
@@ -283,7 +311,6 @@ const styles = StyleSheet.create({
   itemTextView: {
     backgroundColor: 'transparent',
     flex: 1,
-    // borderWidth: 1,
     paddingRight: 100,
     alignItems: 'baseline'
   },

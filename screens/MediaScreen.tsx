@@ -1,11 +1,13 @@
 import * as React from 'react';
 import { StyleSheet, Image, FlatList, TouchableOpacity, Button, ImageBackground } from 'react-native';
-import { min } from 'react-native-reanimated';
 
-import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 import { AntDesign } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
+
+// Redux
+import { ApplicationState, storeAllData, storeProgramData } from '../redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 const fetchURL = "https://app-14423.on-aptible.com/programs";
 
@@ -27,9 +29,8 @@ const Item = ({ data, navigation, id }) => (
     <View style={styles.itemPlay}>
       <TouchableOpacity
         onPress={() => navigation.navigate('PlayModal', {
-          title: data.attributes.name,
-          promo_image: data.attributes.promo_image,
-          programId: id
+          programId: id,
+          episodeId: data.id
         })}
       >
         <LottieView
@@ -58,51 +59,33 @@ const Item = ({ data, navigation, id }) => (
 
 export default function MediaScreen({ navigation, route }) {
 
+  // Redux
+  const dispactch = useDispatch();
+  const {allData, programData} = useSelector((state: ApplicationState) => state.UserReducer);
+
   // Hooks
-  const [pulledData, setPulledData] = React.useState([null]);
   const [programName, setProgramName] = React.useState("");
   const [episodes, setEpisodes] = React.useState([]);
-  const [temp, setTemp] = React.useState([null]);
 
-  async function fetchProgramData(id) {
-    fetch(`${fetchURL}/${id}`, { method: 'get' })
-      .then(response => response.json())
-      .then(data => {
-        setEpisodes(data.included);
-        setPulledData(data);
-        setProgramName(data.data.attributes.name);
-      })
-      .catch(err => {
-        console.error('Request failed', err)
-      })
-  }
-
+  // Render for Flatlist
   const renderItem = ({ item }) => (
     <Item data={item} navigation={navigation} id={route.params} />
   );
 
-  function test() {
-    console.log(episodes);
-    for (let item of episodes) {
-      if (item != null) {
-        console.log(item.id);
-      }
-    }
-  }
-
   React.useEffect(() => {
 
-    fetchProgramData(route.params);
+    for(let program of programData){
+      if (program.data.id == route.params){
+        setEpisodes(program.included);
+        setProgramName(program.data.attributes.name);
+        break;
+      }
+    }
   }, []);
 
   return (
 
     <View style={styles.container}>
-      {/* <ImageBackground 
-        source={{uri: "https://w7.pngwing.com/pngs/41/197/png-transparent-orange-yellow-and-green-floral-illustration-floral-design-illustration-painted-plants-watercolor-painting-flower-arranging-leaf.png"}} 
-        style={styles.image}
-        
-        > */}
 
       <Image source={require('../assets/images/flower.png')} style={styles.image} />
 
@@ -133,14 +116,6 @@ export default function MediaScreen({ navigation, route }) {
             keyExtractor={item => item.id}
           />
       }
-
-      {/* <Button
-          onPress={() => test()}
-          title="Learn More"
-        >
-
-        </Button> */}
-      {/* </ImageBackground> */}
 
     </View>
   );
@@ -180,7 +155,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   headerText: {
-    // width: "100%",
     color: 'black',
     fontSize: 40,
     textAlign: 'center',
@@ -201,7 +175,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     position: 'absolute',
     top: '40%',
-    // margin: 'auto'
   },
   itemMetaArea: {
     backgroundColor: 'transparent',
@@ -210,16 +183,10 @@ const styles = StyleSheet.create({
   itemMeta: {
     color: 'black',
     fontFamily: 'CormorantGaramond_600SemiBold_Italic',
-    // fontSize: 18,
-    // lineHeight: 18
     textAlign: 'center'
   },
   itemDuration: {
     color: 'black',
-    // fontFamily: 'CormorantGaramond_600SemiBold_Italic',
-    // fontSize: 18,
-    // lineHeight: 18
-    // marginTop: 5,
     textAlign: 'center',
     color: '#928d8f',
     fontSize: 13,
@@ -227,7 +194,6 @@ const styles = StyleSheet.create({
   },
   image: {
     position: 'absolute',
-    // top: 200,
     height: '100%',
     width: '100%',
     backgroundColor: 'transparent',
